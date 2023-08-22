@@ -1,0 +1,15 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # Run from this directory
+
+# run the simulation and compute the forces
+
+cartesianMesh
+decomposePar
+mpirun -np $1 --oversubscribe improveMeshQuality -parallel
+checkMesh 1> logs/meshlog
+changeDictionary
+mpirun -np $1 --oversubscribe rhoSimpleFoam -parallel 1> logs/solver
+reconstructPar
+rhoSimpleFoam -postProcess -func computeForces
+./post-processing
+python3 plotforces.py
